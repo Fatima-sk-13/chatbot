@@ -1,62 +1,70 @@
-// Import the required libraries
-const express = require('express');      // Web framework for building the server
-const axios = require('axios');          // Used to make HTTP requests (e.g., to Gemini API)
-const dotenv = require('dotenv');        // Loads environment variables from a .env file
-const path = require('path');            // Helps work with file and directory paths
+// Import required packages
+const express = require('express');
+const cors = require('cors');
+const dotenv = require('dotenv');
+const path = require('path');
+const { GoogleGenerativeAI } = require('@google/generative-ai');
 
-// Load environment variables from the .env file
+// Load environment variables from .env file
 dotenv.config();
 
-// Create an instance of an Express app
+// Initialize Express app
 const app = express();
+const PORT = 3000; // You can change the port if needed
 
-// Define the port number your server will run on
-const PORT = 3000;
+// Middleware to handle CORS, JSON requests, and serve static files
+app.use(cors()); // Allow cross-origin requests
+app.use(express.json()); // Parse incoming JSON requests
+app.use(express.static(path.join(__dirname, 'public'))); // Serve static files from 'public' folder
 
-// Middleware to parse incoming JSON requests
-app.use(express.json());
+// Initialize Gemini API client using API key from .env file
+const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY);
 
-// Middleware to serve static files from the "public" folder (HTML, CSS, JS files)
-app.use(express.static(path.join(__dirname, 'public')));
-
-// Define a POST endpoint at "/chat" to handle chat messages
+// POST endpoint to handle chat messages
 app.post('/chat', async (req, res) => {
-  // Extract the user's message from the request body
   const userMessage = req.body.message;
 
+  // Check if API key is missing
+  if (!process.env.GEMINI_API_KEY) {
+    return res.status(500).json({ reply: "API key is missing in .env file." });
+  }
+
   try {
-    // Get the API key from the environment variables
-    const apiKey = process.env.GEMINI_API_KEY;
+    // Get the generative model (1.5-flash is free tier)
+    const model = genAI.getGenerativeModel({ model: "gemini-2.5-flash" });
 
-    // Send a request to Gemini API with the user's message
-    const response = await axios.post(
-     `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-pro-latest:generateContent?key=${apiKey}`,
-      {
-        contents: [
-          {
-            role: "user",
-            parts: [{ text: userMessage }]
-          }
-        ]
-      }
-    );
+    // Send user message to Gemini API
+    const result = await model.generateContent(userMessage);
 
-    // Extract the bot's reply from the response
-    const reply = response.data.candidates[0].content.parts[0].text;
+    // Get the text reply from the response
+    const response = result.response;
+    const reply = response.text();
 
-    // Send the reply back to the frontend as JSON
+    // Send the reply back to the frontend
     res.json({ reply });
 
   } catch (error) {
-    // If there's an error (e.g., bad API key or quota exceeded), print the error
-    console.error('Gemini API Error:', error.response?.data || error.message);
+    // Log the error to the server console
+    console.error("Gemini API error:", error.message);
 
-    // Respond with a 500 (Internal Server Error) and a message
-    res.status(500).json({ reply: "Error from Gemini API" });
+    // Try to extract a status code from the error
+    const statusCode = error.status || error.response?.status;
+
+    // Handle specific known errors
+    if (statusCode === 429) {
+      res.status(429).json({ reply: "Too many requests — you've hit the rate limit. Try again in a few minutes." });
+    } else if (statusCode === 503) {
+      res.status(503).json({ reply: "Gemini API is overloaded or temporarily unavailable. Try again later." });
+    } else if (statusCode === 401 || statusCode === 403) {
+      res.status(403).json({ reply: "Unauthorized or billing required. Check your API key and billing settings." });
+    } else {
+      // Catch-all error message
+      res.status(500).json({ reply: "Unknown error from Gemini API. Please try again." });
+    }
   }
-});
+}); // ← Closing for app.post
 
-// Start the server and listen for requests on the specified port
+// Start the server
 app.listen(PORT, () => {
   console.log(`Server running at http://localhost:${PORT}`);
 });
