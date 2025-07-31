@@ -68,11 +68,13 @@ body {
 
 .input-area {
   display: flex;
+  align-items: center;
+  gap: 10px;
   padding: 15px;
   background-color: #fff0f5;
   border-top: 1px solid #ffccff;
+  flex-wrap: wrap; /* Already included – good */
 }
-
 .input-area input {
   flex: 1;
   padding: 10px;
@@ -97,3 +99,37 @@ body {
 }
 
 
+.chat-input {
+  flex: 1;
+  min-width: 0; /* Prevents overflow */
+  padding: 10px;
+  border: 1px solid #ff99cc;
+  border-radius: 10px;
+  outline: none;
+  font-size: 16px;
+}
+
+#imageInput {
+  flex: 0 1 auto;
+  padding: 8px;
+  border: 1px solid #ff99cc;
+  border-radius: 10px;
+  font-size: 14px;
+  max-width: 160px;
+}
+
+
+.send-btn {
+  background-color: #ff66b2;
+  color: white;
+  border: none;
+  padding: 10px 15px;
+  border-radius: 10px;
+  cursor: pointer;
+  transition: background 0.3s ease;
+  flex-shrink: 0;
+}
+
+.send-btn:hover {
+  background-color: #e0559e;
+}
