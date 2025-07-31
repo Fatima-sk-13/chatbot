@@ -17,6 +17,7 @@ const sendButton = document.querySelector(".send-btn");
 const chatBox = document.querySelector(".chat-box");
 const imageInput = document.getElementById("imageInput");
 
+
 let base64Image = null; // To hold image in base64 format
 let chatHistory = loadChatFromLocalStorage(); // Load saved chat on start
 
@@ -50,6 +51,14 @@ function addMessage(text, sender = "user") {
   chatBox.scrollTop = chatBox.scrollHeight;
 }
 
+  // When Enter is pressed in the input field
+  input.addEventListener("keydown", function (event) {
+    if (event.key === "Enter") {
+      event.preventDefault(); // Prevents form from refreshing the page
+      sendButton.click();     // Triggers the send button's click event
+    }
+  });
+  
 // Handle send button click
 sendButton.addEventListener("click", async () => {
   const userMessage = input.value.trim();
