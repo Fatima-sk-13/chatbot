@@ -9,7 +9,16 @@
 </head>
 
 <body>
-  <div class="chat-container">
+  <div class="app-container"> <!-- New parent wrapper -->
+
+    <!-- Sidebar -->
+    <div class="sidebar">
+      <h2>🗂️ Chats</h2>
+      <ul id="chatList"></ul>
+      <button id="newChatBtn">➕ New Chat</button>
+    </div>
+
+    <div class="chat-container">
     <div class="chat-header">
       <h1>💬 Chatbot</h1>
       <button class="delete-btn">🗑️ Delete Chat</button>
@@ -21,8 +30,9 @@
 
     <div class="input-area">
       <input type="text" class="chat-input" placeholder="Do you have a question?" />
-      <input type="file" id="imageInput" accept="image/*">
-      <button class="send-btn">Send</button>
+      <button id="uploadBtn">➕</button>
+      <input type="file" id="imageInput" accept="image/*" style="display: none;">
+      <button class="send-btn" style="background-color: rgb(172, 47, 111); color: rgb(235, 226, 234);">Send</button>
     </div>
   </div>
   

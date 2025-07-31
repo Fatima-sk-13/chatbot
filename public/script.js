@@ -1,3 +1,4 @@
+document.addEventListener("DOMContentLoaded", () => {
 console.log("script.js is connected");
 
 // Save chat history to localStorage
@@ -10,12 +11,69 @@ function loadChatFromLocalStorage() {
   const saved = localStorage.getItem("chatHistory");
   return saved ? JSON.parse(saved) : [];
 }
+let currentChatId = null;
+
+function createNewChat() {
+  const id = "chat_" + Date.now();
+  allChats[id] = [];
+  currentChatId = id;
+  saveAllChats();
+  renderChatList();
+  loadChat(currentChatId);
+  return id;
+}
+
+function saveAllChats() {
+  localStorage.setItem("allChats", JSON.stringify(allChats));
+}
+
+function renderChatList() {
+  const chatList = document.getElementById("chatList");
+  chatList.innerHTML = "";
+
+  for (const id in allChats) {
+    const li = document.createElement("li");
+    li.textContent = "Chat " + id.split("_")[1];
+    li.dataset.id = id;
+    if (id === currentChatId) li.classList.add("active");
+
+    li.addEventListener("click", () => {
+      currentChatId = id;
+      renderChatList();
+      loadChat(id);
+    });
+
+    chatList.appendChild(li);
+  }
+}
+
+function loadChat(id) {
+  chatBox.innerHTML = "";
+  chatHistory = allChats[id] || [];
+
+  chatHistory.forEach((msg) => {
+    addMessage(msg.content, msg.role);
+  });
+  saveAllChats();
+}
 
 // DOM elements
 const input = document.querySelector(".chat-input");
 const sendButton = document.querySelector(".send-btn");
 const chatBox = document.querySelector(".chat-box");
 const imageInput = document.getElementById("imageInput");
+const uploadBtn = document.getElementById("uploadBtn");
+const deleteChatBtn = document.querySelector(".delete-btn");
+
+
+let allChats = JSON.parse(localStorage.getItem("allChats")) || {};
+
+
+
+// When the ➕ button is clicked, open the hidden file input
+uploadBtn.addEventListener("click", () => {
+  imageInput.click();
+});
 
 
 let base64Image = null; // To hold image in base64 format
@@ -68,7 +126,9 @@ sendButton.addEventListener("click", async () => {
   // Add user message to UI and history
   addMessage(userMessage || "[Image only]", "user");
   chatHistory.push({ role: "user", content: userMessage || "[Image only]" });
-  saveChatToLocalStorage(chatHistory); // Save updated chat to localStorage
+  allChats[currentChatId] = chatHistory;
+  saveAllChats();
+
   input.value = ""; // Clear text input
 
   try {
@@ -87,7 +147,9 @@ sendButton.addEventListener("click", async () => {
     // Add bot reply to UI and history
     addMessage(data.reply, "bot");
     chatHistory.push({ role: "bot", content: data.reply });
-    saveChatToLocalStorage(chatHistory); // Save again
+    allChats[currentChatId] = chatHistory;
+    saveAllChats();
+
 
     // Clear image after use
     base64Image = null;
@@ -99,10 +161,18 @@ sendButton.addEventListener("click", async () => {
   }
 });
 
-// Delete button clears chat box and localStorage
-const deleteChatBtn = document.querySelector(".delete-btn");
+
+document.getElementById("newChatBtn").addEventListener("click", createNewChat);
+
+// Optional: delete button logic
 deleteChatBtn.addEventListener("click", () => {
   chatBox.innerHTML = "";
-  localStorage.removeItem("chatHistory"); // Remove from local storage
-  chatHistory = []; // Reset memory
+  chatHistory = [];
+  allChats[currentChatId] = [];
+  saveAllChats();
+});
+
+// On page load
+renderChatList();
+loadChat(currentChatId);
 });

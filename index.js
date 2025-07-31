@@ -61,8 +61,7 @@ app.post('/chat', async (req, res) => {
       ...chatHistory,
       { role: "user", parts }
     ];
-
-
+    
       const result = await model.generateContent({ contents });
 
       const response = result.response;
