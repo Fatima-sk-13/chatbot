@@ -194,3 +194,10 @@ body {
 #newChatBtn:hover {
   background-color: #6c043f;
 }
+.delete-chat-btn {
+  font-size: 0.8rem;
+  padding: 2px 6px;
+  background: transparent;
+  border: none;
+  color: red;
+}

@@ -37,12 +37,45 @@ function renderChatList() {
     li.dataset.id = id;
     if (id === currentChatId) li.classList.add("active");
 
+    // ✅ Add delete button next to chat title
+  const deleteBtn = document.createElement("button");
+  deleteBtn.textContent = "🗑️";
+  deleteBtn.classList.add("delete-chat-btn");
+  deleteBtn.style.marginLeft = "10px";
+  deleteBtn.style.cursor = "pointer";
+
+  // ✅ Delete chat logic with confirmation
+  deleteBtn.addEventListener("click", (e) => {
+    e.stopPropagation(); // Prevent opening the chat when delete is clicked
+    const confirmDelete = confirm("Are you sure you want to delete this chat?");
+    if (confirmDelete) {
+      delete allChats[id]; // Remove from memory
+      saveAllChats();      // Save updated data to localStorage
+
+      // If the deleted chat was open, switch to another chat or null
+      if (currentChatId === id) {
+        const remainingChatIds = Object.keys(allChats);
+        if (remainingChatIds.length > 0) {
+          currentChatId = remainingChatIds[0];
+        } else {
+          currentChatId = null;
+          chatBox.innerHTML = "";
+        }
+      }
+
+      renderChatList();
+      if (currentChatId) loadChat(currentChatId);
+    }
+  });
+
+
     li.addEventListener("click", () => {
       currentChatId = id;
       renderChatList();
       loadChat(id);
     });
 
+    li.appendChild(deleteBtn); // ✅ Add delete button inside list item
     chatList.appendChild(li);
   }
 }
