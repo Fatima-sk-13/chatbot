@@ -8,34 +8,32 @@
 
 /* Center the app vertically and horizontally */
 body {
-  background: linear-gradient(to right, #ffe6f0, #ffccff); /* Pink gradient */
+  background: linear-gradient(to right, #ffe6f0, #ffccff);
   margin: 0;
+  height: 100vh; /* full screen */
+  overflow: hidden; /* prevent double scrollbars */
   display: flex;
-  justify-content: center;
-  align-items: center;
-  height: 100vh; /* Full screen height */
 }
 
 /* Outer container that holds sidebar + chat area */
 .app-container {
   display: flex;
-  height: 90vh;
-  width: 95vw;
-  max-width: 1200px;
+  width: 100vw;
+  height: 100vh;
   background-color: white;
-  border-radius: 20px;
-  box-shadow: 0 0 20px rgba(255, 105, 180, 0.3);
   overflow: hidden;
 }
 
+
 /* Sidebar section (left side) */
 .sidebar {
-  width: 220px;
+  width: 240px;
   background: #ffe6f0;
   padding: 10px;
   border-right: 2px solid #ff99cc;
   overflow-y: auto;
 }
+
 
 /* Sidebar heading */
 .sidebar h2 {
@@ -108,14 +106,10 @@ body {
 
 /* Chat container (right side) */
 .chat-container {
-  background-color: white;
-  width: 90vw;
-  max-width: 1100px;
-  height: 90vh;
-  box-shadow: 0 0 15px rgba(255, 105, 180, 0.3);
+  flex: 1;
   display: flex;
   flex-direction: column;
-  overflow: hidden;
+  height: 100vh;
 }
 
 /* Chat header bar */
@@ -126,6 +120,9 @@ body {
   display: flex;
   justify-content: space-between;
   align-items: center;
+  position: sticky;
+  top: 0;
+  z-index: 1;
 }
 
 /* Clear all chats button */
@@ -147,6 +144,7 @@ body {
   background-color: #fff0f5;
 }
 
+
 /* Individual chat message */
 .message {
   background-color: #ffe6f0;
@@ -156,6 +154,28 @@ body {
   width: fit-content;
   max-width: 80%;
 }
+
+.message img {
+  max-width: 300px;   /* Limits width */
+  max-height: 300px;  /* Limits height */
+  border-radius: 10px;
+  margin-top: 8px;
+}
+
+#imagePreview img {
+  max-width: 300px;
+  max-height: 300px;
+  border-radius: 8px;
+  margin-left: 10px;
+  object-fit: cover;
+}
+
+.input-with-preview {
+  display: flex;
+  flex-direction: column;
+  flex: 1;
+}
+
 
 /* Style for bot messages */
 .message.bot {
@@ -174,6 +194,7 @@ body {
   flex-wrap: wrap;
 }
 
+
 /* Text input field */
 .input-area input {
   flex: 1;
@@ -183,33 +204,45 @@ body {
   outline: none;
 }
 
-/* Buttons inside input area (e.g., send button) */
-.input-area button {
-  background-color: #efefef;
-  color: rgb(133, 75, 93);
-  border: none;
-  padding: 10px 15px;
-  margin-left: 10px;
-  border-radius: 10px;
-  cursor: pointer;
-  transition: background 0.3s ease;
-}
-
-/* Hover effect for send/image buttons */
-.input-area button:hover {
-  background-color: #e0559e;
-}
-
 /* Chat input field (specific class) */
 .chat-input {
+  display: flex;
+  align-items: center;
   flex: 1;
-  min-width: 0;
-  padding: 10px;
+  background-color: white;
   border: 1px solid #ff99cc;
   border-radius: 10px;
+  padding: 5px 10px;
+  gap: 10px;
+  min-width: 0;
+}
+
+.chat-input input[type="text"] {
+  flex: 1;
+  border: none;
   outline: none;
   font-size: 16px;
+  padding: 10px;
 }
+
+/* These target the buttons inside the input bar */
+.chat-input .upload-btn,
+.chat-input .send-btn {
+  background-color: #e6308b;
+  color: white;
+  border: none;
+  padding: 8px 12px;
+  border-radius: 8px;
+  cursor: pointer;
+  transition: background 0.3s ease;
+  flex-shrink: 0;
+}
+
+.chat-input .upload-btn:hover,
+.chat-input .send-btn:hover {
+  background-color: #721a49;
+}
+
 
 /* File upload input */
 #imageInput {
@@ -221,10 +254,9 @@ body {
   max-width: 160px;
 }
 
-/* Send message button */
 .send-btn {
-  background-color: #ff66b2;
-  color: white;
+  background-color: #e6308b; 
+  color: rgb(255, 255, 255);              
   border: none;
   padding: 10px 15px;
   border-radius: 10px;
@@ -234,6 +266,21 @@ body {
 }
 
 .send-btn:hover {
-  background-color: #e0559e;
+  background-color: #721a49; 
+}
+
+.upload-btn {
+  background-color: #e6308b; 
+  color: rgb(255, 255, 255);              
+  border: none;
+  padding: 10px 15px;
+  border-radius: 10px;
+  cursor: pointer;
+  transition: background 0.3s ease;
+  flex-shrink: 0;
+}
+
+.upload-btn:hover {
+  background-color: #721a49; 
 }
 

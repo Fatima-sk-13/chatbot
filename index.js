@@ -22,7 +22,8 @@ const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY);
 
 // POST endpoint to handle chat messages
 app.post('/chat', async (req, res) => {
-  const { message, image,history } = req.body;
+  const { message, images = [], history } = req.body; 
+
 
   if (!process.env.GEMINI_API_KEY) {
     return res.status(500).json({ reply: "API key is missing in .env file." });
@@ -42,20 +43,23 @@ app.post('/chat', async (req, res) => {
     : [];
 
 
-    const parts = [];
+   const parts = [];
 
-      if (image) {
-        parts.push({
-          inlineData: {
-            mimeType: "image/png", // Or image/jpeg
-            data: image
-          }
-        });
+if (Array.isArray(images) && images.length > 0) {
+  images.forEach((base64) => {
+    parts.push({
+      inlineData: {
+        mimeType: "image/jpeg", // or "image/png"
+        data: base64
       }
+    });
+  });
+}
 
-      if (message) {
-      parts.push({ text: message });
-    }
+if (message) {
+  parts.push({ text: message });
+}
+
 
     const contents = [
       ...chatHistory,

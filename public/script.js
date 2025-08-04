@@ -1,8 +1,9 @@
 document.addEventListener("DOMContentLoaded", () => {
   console.log("script.js is connected");
 
+
   // 🔹 DOM Elements
-  const input = document.querySelector(".chat-input");
+  const input = document.querySelector(".chat-input input");
   const sendButton = document.querySelector(".send-btn");
   const chatBox = document.querySelector(".chat-box");
   const imageInput = document.getElementById("imageInput");
@@ -10,10 +11,19 @@ document.addEventListener("DOMContentLoaded", () => {
   const deleteChatBtn = document.querySelector(".delete-btn");
 
   // 🔹 Chat data and state
-  let currentChatId = null;
+  let currentChatId = localStorage.getItem("currentChatId");
   let allChats = JSON.parse(localStorage.getItem("allChats")) || {}; // All chat sessions
   let base64Image = null; // To store image as base64 string
   let chatHistory = loadChatFromLocalStorage(); // Load last-used session (optional)
+
+  let base64Images = [];
+
+  input.addEventListener("keydown", function (event) {
+    if (event.key === "Enter") {
+      event.preventDefault();
+      sendMessage();
+    }
+  });
 
   // ✅ Save one session's messages to localStorage
   function saveChatToLocalStorage(messages) {
@@ -36,6 +46,7 @@ document.addEventListener("DOMContentLoaded", () => {
     const id = "chat_" + Date.now(); // Unique ID for chat
     allChats[id] = [];                // Start with empty array
     currentChatId = id;
+    localStorage.setItem("currentChatId", currentChatId);
     saveAllChats();
     renderChatList();
     loadChat(currentChatId);
@@ -82,6 +93,7 @@ document.addEventListener("DOMContentLoaded", () => {
       // ✅ Switch to chat on click
       li.addEventListener("click", () => {
         currentChatId = id;
+        localStorage.setItem("currentChatId", currentChatId);
         renderChatList();
         loadChat(id);
       });
@@ -97,67 +109,76 @@ document.addEventListener("DOMContentLoaded", () => {
     chatBox.innerHTML = "";
     chatHistory = allChats[id] || [];
     chatHistory.forEach((msg) => {
-      addMessage(msg.content, msg.role);
-    });
+  addMessage(msg.content, msg.role, msg.images || []);
+});
     saveAllChats();
   }
 
   // ✅ Add one message (bot or user) to UI
-  function addMessage(text, sender = "user") {
-    const message = document.createElement("div");
-    message.classList.add("message");
-    if (sender === "bot") message.classList.add("bot");
-    message.textContent = sender === "bot" ? `🤖 Bot: ${text}` : `👧 You: ${text}`;
-    chatBox.appendChild(message);
-    chatBox.scrollTop = chatBox.scrollHeight; // Scroll to bottom
+function addMessage(text, sender = "user", images = []) {
+  const message = document.createElement("div");
+  message.classList.add("message");
+  if (sender === "bot") message.classList.add("bot");
+
+  const messageContent = document.createElement("div");
+  messageContent.textContent = sender === "bot" ? `🤖 Bot: ${text}` : `👧 You: ${text}`;
+  message.appendChild(messageContent);
+
+  if (images && images.length > 0) {
+    images.forEach((imgBase64) => {
+      const img = document.createElement("img");
+      img.src = `data:image/jpeg;base64,${imgBase64}`;
+      img.alt = "uploaded image";
+      img.classList.add("preview-image");
+      message.appendChild(img);
+    });
   }
 
-  // ✅ Enter key sends message
-  input.addEventListener("keydown", function (event) {
-    if (event.key === "Enter") {
-      event.preventDefault();
-      sendButton.click();
-    }
-  });
+  chatBox.appendChild(message);
+  chatBox.scrollTop = chatBox.scrollHeight;
+}
 
-  // ✅ Click send button
-  sendButton.addEventListener("click", async () => {
-    const userMessage = input.value.trim();
-    if (!userMessage && !base64Image) return;
 
-    addMessage(userMessage || "[Image only]", "user");
-    chatHistory.push({ role: "user", content: userMessage || "[Image only]" });
+   // ✅ Click send button
+async function sendMessage() {
+  const userMessage = input.value.trim();
+  if (!userMessage && base64Images.length === 0) return;
+
+  const messageToSend = userMessage || "[Image only]";
+  addMessage(userMessage, "user", base64Images);
+
+  chatHistory.push({ role: "user", content: userMessage, images: base64Images });
+  allChats[currentChatId] = chatHistory;
+  saveAllChats();
+  input.value = "";
+
+  try {
+    const res = await fetch("/chat", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        message: messageToSend,
+        images: base64Images,
+        history: chatHistory
+      })
+    });
+
+    const data = await res.json();
+    addMessage(data.reply, "bot");
+
+    chatHistory.push({ role: "bot", content: data.reply, images: [] });
     allChats[currentChatId] = chatHistory;
     saveAllChats();
 
-    input.value = "";
-
-    try {
-      const res = await fetch("/chat", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          message: userMessage,
-          image: base64Image,
-          history: chatHistory
-        })
-      });
-
-      const data = await res.json();
-
-      addMessage(data.reply, "bot");
-      chatHistory.push({ role: "bot", content: data.reply });
-      allChats[currentChatId] = chatHistory;
-      saveAllChats();
-
-      base64Image = null; // Clear image
-      imageInput.value = "";
-
-    } catch (err) {
-      console.error(err);
-      addMessage("Error: Could not reach server.", "bot");
-    }
-  });
+    base64Images = [];
+    imageInput.value = "";
+    document.getElementById("imagePreview").innerHTML = "";
+  } catch (err) {
+    console.error(err);
+    addMessage("Error: Could not reach server.", "bot");
+  }
+}
+sendButton.addEventListener("click", sendMessage);
 
   // ✅ Upload image button triggers file input
   uploadBtn.addEventListener("click", () => {
@@ -166,18 +187,26 @@ document.addEventListener("DOMContentLoaded", () => {
 
   // ✅ Convert uploaded image to base64
   imageInput.addEventListener("change", () => {
-    const file = imageInput.files[0];
+  const files = Array.from(imageInput.files);
+  const preview = document.getElementById("imagePreview");
+  preview.innerHTML = "";
+  base64Images = [];
+
+  files.forEach((file) => {
     const reader = new FileReader();
-
     reader.onloadend = () => {
-      base64Image = reader.result.split(',')[1];
-      console.log("Image converted to base64");
-    };
+      const base64 = reader.result.split(",")[1];
+      base64Images.push(base64);
 
-    if (file) {
-      reader.readAsDataURL(file);
-    }
+      const img = document.createElement("img");
+      img.src = reader.result;
+      img.alt = "preview";
+      img.classList.add("preview-image");
+      preview.appendChild(img);
+    };
+    reader.readAsDataURL(file);
   });
+});
 
   // ✅ Create a new chat session when ➕ is clicked
   document.getElementById("newChatBtn").addEventListener("click", createNewChat);
@@ -189,6 +218,10 @@ document.addEventListener("DOMContentLoaded", () => {
     allChats[currentChatId] = [];
     saveAllChats();
   });
+
+  if (!currentChatId|| !allChats[currentChatId]) {
+  createNewChat(); // ✅ Automatically create a chat if none
+}
 
   // ✅ On page load: render sidebar + load active chat
   renderChatList();
