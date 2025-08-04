@@ -1,211 +1,196 @@
 document.addEventListener("DOMContentLoaded", () => {
-console.log("script.js is connected");
+  console.log("script.js is connected");
 
-// Save chat history to localStorage
-function saveChatToLocalStorage(messages) {
-  localStorage.setItem("chatHistory", JSON.stringify(messages));
-}
+  // 🔹 DOM Elements
+  const input = document.querySelector(".chat-input");
+  const sendButton = document.querySelector(".send-btn");
+  const chatBox = document.querySelector(".chat-box");
+  const imageInput = document.getElementById("imageInput");
+  const uploadBtn = document.getElementById("uploadBtn");
+  const deleteChatBtn = document.querySelector(".delete-btn");
 
-// Load chat history from localStorage
-function loadChatFromLocalStorage() {
-  const saved = localStorage.getItem("chatHistory");
-  return saved ? JSON.parse(saved) : [];
-}
-let currentChatId = null;
+  // 🔹 Chat data and state
+  let currentChatId = null;
+  let allChats = JSON.parse(localStorage.getItem("allChats")) || {}; // All chat sessions
+  let base64Image = null; // To store image as base64 string
+  let chatHistory = loadChatFromLocalStorage(); // Load last-used session (optional)
 
-function createNewChat() {
-  const id = "chat_" + Date.now();
-  allChats[id] = [];
-  currentChatId = id;
-  saveAllChats();
-  renderChatList();
-  loadChat(currentChatId);
-  return id;
-}
+  // ✅ Save one session's messages to localStorage
+  function saveChatToLocalStorage(messages) {
+    localStorage.setItem("chatHistory", JSON.stringify(messages));
+  }
 
-function saveAllChats() {
-  localStorage.setItem("allChats", JSON.stringify(allChats));
-}
+  // ✅ Load one session's messages from localStorage
+  function loadChatFromLocalStorage() {
+    const saved = localStorage.getItem("chatHistory");
+    return saved ? JSON.parse(saved) : [];
+  }
 
-function renderChatList() {
-  const chatList = document.getElementById("chatList");
-  chatList.innerHTML = "";
+  // ✅ Save all chats to localStorage
+  function saveAllChats() {
+    localStorage.setItem("allChats", JSON.stringify(allChats));
+  }
 
-  for (const id in allChats) {
-    const li = document.createElement("li");
-    li.textContent = "Chat " + id.split("_")[1];
-    li.dataset.id = id;
-    if (id === currentChatId) li.classList.add("active");
+  // ✅ Create a new chat session
+  function createNewChat() {
+    const id = "chat_" + Date.now(); // Unique ID for chat
+    allChats[id] = [];                // Start with empty array
+    currentChatId = id;
+    saveAllChats();
+    renderChatList();
+    loadChat(currentChatId);
+    return id;
+  }
 
-    // ✅ Add delete button next to chat title
-  const deleteBtn = document.createElement("button");
-  deleteBtn.textContent = "🗑️";
-  deleteBtn.classList.add("delete-chat-btn");
-  deleteBtn.style.marginLeft = "10px";
-  deleteBtn.style.cursor = "pointer";
+  // ✅ Render sidebar chat list
+  function renderChatList() {
+    const chatList = document.getElementById("chatList");
+    chatList.innerHTML = "";
 
-  // ✅ Delete chat logic with confirmation
-  deleteBtn.addEventListener("click", (e) => {
-    e.stopPropagation(); // Prevent opening the chat when delete is clicked
-    const confirmDelete = confirm("Are you sure you want to delete this chat?");
-    if (confirmDelete) {
-      delete allChats[id]; // Remove from memory
-      saveAllChats();      // Save updated data to localStorage
+    for (const id in allChats) {
+      const li = document.createElement("li");
+      li.dataset.id = id;
+      if (id === currentChatId) li.classList.add("active");
 
-      // If the deleted chat was open, switch to another chat or null
-      if (currentChatId === id) {
-        const remainingChatIds = Object.keys(allChats);
-        if (remainingChatIds.length > 0) {
-          currentChatId = remainingChatIds[0];
-        } else {
-          currentChatId = null;
-          chatBox.innerHTML = "";
+      const chatLabel = document.createElement("span");
+      chatLabel.textContent = "Chat " + id.split("_")[1];
+
+      const deleteBtn = document.createElement("button");
+      deleteBtn.textContent = "🗑️";
+      deleteBtn.classList.add("delete-chat-btn");
+      deleteBtn.style.cursor = "pointer";
+
+      // ✅ Delete a chat
+      deleteBtn.addEventListener("click", (e) => {
+        e.stopPropagation(); // Prevent opening chat
+        const confirmDelete = confirm("Are you sure you want to delete this chat?");
+        if (confirmDelete) {
+          delete allChats[id];
+          saveAllChats();
+
+          if (currentChatId === id) {
+            const remainingChatIds = Object.keys(allChats);
+            currentChatId = remainingChatIds.length > 0 ? remainingChatIds[0] : null;
+            chatBox.innerHTML = "";
+          }
+
+          renderChatList();
+          if (currentChatId) loadChat(currentChatId);
         }
-      }
+      });
 
-      renderChatList();
-      if (currentChatId) loadChat(currentChatId);
+      // ✅ Switch to chat on click
+      li.addEventListener("click", () => {
+        currentChatId = id;
+        renderChatList();
+        loadChat(id);
+      });
+
+      li.appendChild(deleteBtn);
+      li.appendChild(chatLabel);
+      chatList.appendChild(li);
     }
-  });
+  }
 
-
-    li.addEventListener("click", () => {
-      currentChatId = id;
-      renderChatList();
-      loadChat(id);
+  // ✅ Load all messages for a specific chat session
+  function loadChat(id) {
+    chatBox.innerHTML = "";
+    chatHistory = allChats[id] || [];
+    chatHistory.forEach((msg) => {
+      addMessage(msg.content, msg.role);
     });
-
-    li.appendChild(deleteBtn); // ✅ Add delete button inside list item
-    chatList.appendChild(li);
+    saveAllChats();
   }
-}
 
-function loadChat(id) {
-  chatBox.innerHTML = "";
-  chatHistory = allChats[id] || [];
-
-  chatHistory.forEach((msg) => {
-    addMessage(msg.content, msg.role);
-  });
-  saveAllChats();
-}
-
-// DOM elements
-const input = document.querySelector(".chat-input");
-const sendButton = document.querySelector(".send-btn");
-const chatBox = document.querySelector(".chat-box");
-const imageInput = document.getElementById("imageInput");
-const uploadBtn = document.getElementById("uploadBtn");
-const deleteChatBtn = document.querySelector(".delete-btn");
-
-
-let allChats = JSON.parse(localStorage.getItem("allChats")) || {};
-
-
-
-// When the ➕ button is clicked, open the hidden file input
-uploadBtn.addEventListener("click", () => {
-  imageInput.click();
-});
-
-
-let base64Image = null; // To hold image in base64 format
-let chatHistory = loadChatFromLocalStorage(); // Load saved chat on start
-
-// Show previous messages when page loads
-chatHistory.forEach((msg) => {
-  addMessage(msg.content, msg.role);
-});
-
-// Handle image upload and convert to base64
-imageInput.addEventListener("change", () => {
-  const file = imageInput.files[0];
-  const reader = new FileReader();
-
-  reader.onloadend = () => {
-    base64Image = reader.result.split(',')[1]; // Remove base64 header
-    console.log("Image converted to base64");
-  };
-
-  if (file) {
-    reader.readAsDataURL(file);
+  // ✅ Add one message (bot or user) to UI
+  function addMessage(text, sender = "user") {
+    const message = document.createElement("div");
+    message.classList.add("message");
+    if (sender === "bot") message.classList.add("bot");
+    message.textContent = sender === "bot" ? `🤖 Bot: ${text}` : `👧 You: ${text}`;
+    chatBox.appendChild(message);
+    chatBox.scrollTop = chatBox.scrollHeight; // Scroll to bottom
   }
-});
 
-// Function to add a message to the chat box
-function addMessage(text, sender = "user") {
-  const message = document.createElement("div");
-  message.classList.add("message");
-  if (sender === "bot") message.classList.add("bot");
-  message.textContent = sender === "bot" ? `🤖 Bot: ${text}` : `👧 You: ${text}`;
-  chatBox.appendChild(message);
-  chatBox.scrollTop = chatBox.scrollHeight;
-}
-
-  // When Enter is pressed in the input field
+  // ✅ Enter key sends message
   input.addEventListener("keydown", function (event) {
     if (event.key === "Enter") {
-      event.preventDefault(); // Prevents form from refreshing the page
-      sendButton.click();     // Triggers the send button's click event
+      event.preventDefault();
+      sendButton.click();
     }
   });
-  
-// Handle send button click
-sendButton.addEventListener("click", async () => {
-  const userMessage = input.value.trim();
 
-  if (!userMessage && !base64Image) return; // Do nothing if both are empty
+  // ✅ Click send button
+  sendButton.addEventListener("click", async () => {
+    const userMessage = input.value.trim();
+    if (!userMessage && !base64Image) return;
 
-  // Add user message to UI and history
-  addMessage(userMessage || "[Image only]", "user");
-  chatHistory.push({ role: "user", content: userMessage || "[Image only]" });
-  allChats[currentChatId] = chatHistory;
-  saveAllChats();
-
-  input.value = ""; // Clear text input
-
-  try {
-    const res = await fetch("/chat", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({
-        message: userMessage,
-        image: base64Image,
-        history: chatHistory, // Send full history to server
-      })
-    });
-
-    const data = await res.json();
-
-    // Add bot reply to UI and history
-    addMessage(data.reply, "bot");
-    chatHistory.push({ role: "bot", content: data.reply });
+    addMessage(userMessage || "[Image only]", "user");
+    chatHistory.push({ role: "user", content: userMessage || "[Image only]" });
     allChats[currentChatId] = chatHistory;
     saveAllChats();
 
+    input.value = "";
 
-    // Clear image after use
-    base64Image = null;
-    imageInput.value = "";
+    try {
+      const res = await fetch("/chat", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          message: userMessage,
+          image: base64Image,
+          history: chatHistory
+        })
+      });
 
-  } catch (err) {
-    console.error(err);
-    addMessage("Error: Could not reach server.", "bot");
-  }
-});
+      const data = await res.json();
 
+      addMessage(data.reply, "bot");
+      chatHistory.push({ role: "bot", content: data.reply });
+      allChats[currentChatId] = chatHistory;
+      saveAllChats();
 
-document.getElementById("newChatBtn").addEventListener("click", createNewChat);
+      base64Image = null; // Clear image
+      imageInput.value = "";
 
-// Optional: delete button logic
-deleteChatBtn.addEventListener("click", () => {
-  chatBox.innerHTML = "";
-  chatHistory = [];
-  allChats[currentChatId] = [];
-  saveAllChats();
-});
+    } catch (err) {
+      console.error(err);
+      addMessage("Error: Could not reach server.", "bot");
+    }
+  });
 
-// On page load
-renderChatList();
-loadChat(currentChatId);
+  // ✅ Upload image button triggers file input
+  uploadBtn.addEventListener("click", () => {
+    imageInput.click();
+  });
+
+  // ✅ Convert uploaded image to base64
+  imageInput.addEventListener("change", () => {
+    const file = imageInput.files[0];
+    const reader = new FileReader();
+
+    reader.onloadend = () => {
+      base64Image = reader.result.split(',')[1];
+      console.log("Image converted to base64");
+    };
+
+    if (file) {
+      reader.readAsDataURL(file);
+    }
+  });
+
+  // ✅ Create a new chat session when ➕ is clicked
+  document.getElementById("newChatBtn").addEventListener("click", createNewChat);
+
+  // ✅ Clear current chat content manually
+  deleteChatBtn.addEventListener("click", () => {
+    chatBox.innerHTML = "";
+    chatHistory = [];
+    allChats[currentChatId] = [];
+    saveAllChats();
+  });
+
+  // ✅ On page load: render sidebar + load active chat
+  renderChatList();
+  loadChat(currentChatId);
 });

@@ -1,20 +1,22 @@
-/* Reset margins and padding */
+/* Reset margins and padding globally */
 * {
   margin: 0;
   padding: 0;
   box-sizing: border-box;
-  font-family: 'Segoe UI', sans-serif;
+  font-family: 'Segoe UI', sans-serif; /* Used for clean modern look */
 }
 
+/* Center the app vertically and horizontally */
 body {
-  background: linear-gradient(to right, #ffe6f0, #ffccff);
+  background: linear-gradient(to right, #ffe6f0, #ffccff); /* Pink gradient */
   margin: 0;
   display: flex;
   justify-content: center;
   align-items: center;
-  height: 100vh;
+  height: 100vh; /* Full screen height */
 }
 
+/* Outer container that holds sidebar + chat area */
 .app-container {
   display: flex;
   height: 90vh;
@@ -26,11 +28,88 @@ body {
   overflow: hidden;
 }
 
+/* Sidebar section (left side) */
+.sidebar {
+  width: 220px;
+  background: #ffe6f0;
+  padding: 10px;
+  border-right: 2px solid #ff99cc;
+  overflow-y: auto;
+}
 
+/* Sidebar heading */
+.sidebar h2 {
+  font-size: 1.2em;
+  margin-bottom: 10px;
+}
+
+/* Chat list container */
+#chatList {
+  list-style: none;
+  padding: 0;
+}
+
+/* Individual chat item in sidebar */
+#chatList li {
+  display: flex; /* So chat name and delete button appear in same row */
+  justify-content: space-between;
+  align-items: center;
+  padding: 8px;
+  background-color: #d3d3d3;
+  margin-bottom: 8px;
+  border-radius: 8px;
+  word-break: break-word;
+  overflow-wrap: break-word;
+  max-width: 100%;
+  box-sizing: border-box;
+}
+
+/* Highlight active chat */
+#chatList li.active {
+  background-color: #a3d8ff;
+  font-weight: bold;
+}
+
+/* Chat name inside each chat list item */
+#chatList li span {
+  flex: 1;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+/* Delete icon next to chat */
+.delete-chat-btn {
+  font-size: 0.8rem;
+  padding: 2px 6px;
+  background: transparent;
+  border: none;
+  color: red;
+  cursor: pointer;
+}
+
+/* Button to add a new chat */
+#newChatBtn {
+  margin-top: 10px;
+  padding: 8px;
+  width: 100%;
+  background-color: #bb88a0c5;
+  color: white;
+  border: none;
+  border-radius: 5px;
+  cursor: pointer;
+}
+
+/* Hover effect for new chat button */
+#newChatBtn:hover {
+  background-color: #6c043f;
+}
+
+/* Chat container (right side) */
 .chat-container {
   background-color: white;
-  width: 95vw; /* Viewport width */
-  max-width: 1200px; /* Allow it to grow bigger */
+  width: 90vw;
+  max-width: 1100px;
   height: 90vh;
   box-shadow: 0 0 15px rgba(255, 105, 180, 0.3);
   display: flex;
@@ -38,7 +117,7 @@ body {
   overflow: hidden;
 }
 
-
+/* Chat header bar */
 .chat-header {
   background-color: #ff99cc;
   color: white;
@@ -48,6 +127,7 @@ body {
   align-items: center;
 }
 
+/* Clear all chats button */
 .delete-btn {
   background-color: transparent;
   color: white;
@@ -58,6 +138,7 @@ body {
   font-size: 0.9rem;
 }
 
+/* Main chat message display box */
 .chat-box {
   flex: 1;
   padding: 20px;
@@ -65,6 +146,7 @@ body {
   background-color: #fff0f5;
 }
 
+/* Individual chat message */
 .message {
   background-color: #ffe6f0;
   padding: 10px;
@@ -74,11 +156,13 @@ body {
   max-width: 80%;
 }
 
+/* Style for bot messages */
 .message.bot {
   background-color: #ffd6ea;
   align-self: flex-start;
 }
 
+/* Input area (bottom of chat) */
 .input-area {
   display: flex;
   align-items: center;
@@ -86,8 +170,10 @@ body {
   padding: 15px;
   background-color: #fff0f5;
   border-top: 1px solid #ffccff;
-  flex-wrap: wrap; /* Already included – good */
+  flex-wrap: wrap;
 }
+
+/* Text input field */
 .input-area input {
   flex: 1;
   padding: 10px;
@@ -96,6 +182,7 @@ body {
   outline: none;
 }
 
+/* Buttons inside input area (e.g., send button) */
 .input-area button {
   background-color: #efefef;
   color: rgb(133, 75, 93);
@@ -107,14 +194,15 @@ body {
   transition: background 0.3s ease;
 }
 
+/* Hover effect for send/image buttons */
 .input-area button:hover {
   background-color: #e0559e;
 }
 
-
+/* Chat input field (specific class) */
 .chat-input {
   flex: 1;
-  min-width: 0; /* Prevents overflow */
+  min-width: 0;
   padding: 10px;
   border: 1px solid #ff99cc;
   border-radius: 10px;
@@ -122,6 +210,7 @@ body {
   font-size: 16px;
 }
 
+/* File upload input */
 #imageInput {
   flex: 0 1 auto;
   padding: 8px;
@@ -131,7 +220,7 @@ body {
   max-width: 160px;
 }
 
-
+/* Send message button */
 .send-btn {
   background-color: #ff66b2;
   color: white;
@@ -147,57 +236,3 @@ body {
   background-color: #e0559e;
 }
 
-
-.sidebar {
-  width: 220px;
-  background: #ffe6f0;
-  padding: 10px;
-  border-right: 2px solid #ff99cc;
-  overflow-y: auto;
-}
-
-
-.sidebar h2 {
-  font-size: 1.2em;
-  margin-bottom: 10px;
-}
-
-#chatList {
-  list-style: none;
-  padding: 0;
-}
-
-#chatList li {
-  padding: 8px;
-  margin-bottom: 6px;
-  background: #ddd;
-  cursor: pointer;
-  border-radius: 5px;
-}
-
-#chatList li.active {
-  background-color: #a3d8ff;
-  font-weight: bold;
-}
-
-#newChatBtn {
-  margin-top: 10px;
-  padding: 8px;
-  width: 100%;
-  background-color: #bb88a0c5;
-  color: white;
-  border: none;
-  border-radius: 5px;
-  cursor: pointer;
-}
-
-#newChatBtn:hover {
-  background-color: #6c043f;
-}
-.delete-chat-btn {
-  font-size: 0.8rem;
-  padding: 2px 6px;
-  background: transparent;
-  border: none;
-  color: red;
-}
