@@ -1,3 +1,5 @@
+<!--index.html-->
+
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -13,15 +15,19 @@
 
     <!-- Sidebar -->
     <div class="sidebar">
-      <h2>🗂️ Chats</h2>
+      <h2 style="color: #5b022d">🗂️ Chats</h2>
       <ul id="chatList"></ul>
-      <button id="newChatBtn">➕ New Chat</button>
+      <button id="newChatBtn" style="font-size: 1rem;">New Chat</button>
     </div>
 
     <div class="chat-container">
     <div class="chat-header">
       <h1>💬 Chatbot</h1>
-      <button class="delete-btn">🗑️ Delete Chat</button>
+      <button class="delete-btn">
+      <img src="images/trash.jfif" alt="Delete" class="trash-icon">
+      <span>Delete Chat</span>
+</button>
+
     </div>
 
     <div class="chat-box">
@@ -30,19 +36,19 @@
 
   <div class="input-area">
     <div class="chat-input">
-      <button id="uploadBtn" class="upload-btn" title="add an image/file">+</button>
+      <button id="uploadBtn" class="upload-btn" title="add an image/file" style="font-weight: bold;">+</button>
 
       <div class="input-with-preview">
       <div id="imagePreview" class="image-preview"></div>
-      <input type="text" placeholder="Do you have a question?" />
+      <textarea placeholder="Do you have a question?" rows="1"></textarea>
       </div>
-      
+
       <button class="send-btn">Send</button>
     </div>
     <input type="file" id="imageInput" style="display: none;">
   </div>
   
-
+  <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
   <script src="script.js"></script>
 </body>
 </html>

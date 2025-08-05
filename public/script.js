@@ -1,9 +1,10 @@
+//script.js
+
 document.addEventListener("DOMContentLoaded", () => {
   console.log("script.js is connected");
 
-
   // 🔹 DOM Elements
-  const input = document.querySelector(".chat-input input");
+  const input = document.querySelector(".chat-input textarea");
   const sendButton = document.querySelector(".send-btn");
   const chatBox = document.querySelector(".chat-box");
   const imageInput = document.getElementById("imageInput");
@@ -19,11 +20,58 @@ document.addEventListener("DOMContentLoaded", () => {
   let base64Images = [];
 
   input.addEventListener("keydown", function (event) {
-    if (event.key === "Enter") {
+  if (event.key === "Enter") {
+    if (event.shiftKey) {
+      // Insert newline
+      event.preventDefault();
+      const start = input.selectionStart;
+      const end = input.selectionEnd;
+      input.value = input.value.slice(0, start) + "\n" + input.value.slice(end);
+      input.selectionStart = input.selectionEnd = start + 1;
+    } else {
+      // Send message
       event.preventDefault();
       sendMessage();
     }
+  }
+});
+
+  function autoResizeTextarea() {
+    input.style.height = "auto";            // Reset height
+    input.style.height = input.scrollHeight + "px"; // Set to actual content height
+  }
+
+  function formatBotResponse(content) {
+  if (!content.startsWith("<h2>")) {
+    content = "<p>" + content + "</p>";
+  }
+
+  const lines = content.split('\n');
+  let inList = false;
+  let formatted = [];
+
+  lines.forEach((line) => {
+    const trimmed = line.trim();
+    if (/^\d+\.\s/.test(trimmed)) {
+      if (!inList) {
+        inList = true;
+        formatted.push("<ol>");
+      }
+      formatted.push("<li>" + trimmed.replace(/^\d+\.\s/, '') + "</li>");
+    } else if (trimmed === "" && inList) {
+      inList = false;
+      formatted.push("</ol>");
+    } else {
+      formatted.push("<p>" + line + "</p>");
+    }
   });
+
+  if (inList) {
+    formatted.push("</ol>");
+  }
+
+  return formatted.join('');
+}
 
   // ✅ Save one session's messages to localStorage
   function saveChatToLocalStorage(messages) {
@@ -38,8 +86,15 @@ document.addEventListener("DOMContentLoaded", () => {
 
   // ✅ Save all chats to localStorage
   function saveAllChats() {
-    localStorage.setItem("allChats", JSON.stringify(allChats));
+  // Remove chats with no messages
+  for (const id in allChats) {
+    if (!allChats[id] || allChats[id].length === 0) {
+      delete allChats[id];
+    }
   }
+  localStorage.setItem("allChats", JSON.stringify(allChats));
+}
+
 
   // ✅ Create a new chat session
   function createNewChat() {
@@ -64,7 +119,20 @@ document.addEventListener("DOMContentLoaded", () => {
       if (id === currentChatId) li.classList.add("active");
 
       const chatLabel = document.createElement("span");
-      chatLabel.textContent = "Chat " + id.split("_")[1];
+      let firstMessage = allChats[id]?.[0];
+      let previewText = "New Chat";
+
+      if (firstMessage) {
+        if (firstMessage.content && firstMessage.content !== "[Image only]") {
+          previewText = firstMessage.content;
+        } else if (firstMessage.images && firstMessage.images.length > 0) {
+          previewText = "Image message";
+        }
+      }
+
+      const preview = previewText.length > 30 ? previewText.slice(0, 30) + "..." : previewText;
+      chatLabel.textContent = preview;
+      chatLabel.title = previewText;
 
       const deleteBtn = document.createElement("button");
       deleteBtn.textContent = "🗑️";
@@ -114,14 +182,22 @@ document.addEventListener("DOMContentLoaded", () => {
     saveAllChats();
   }
 
-  // ✅ Add one message (bot or user) to UI
+// ✅ Add one message (bot or user) to UI
 function addMessage(text, sender = "user", images = []) {
   const message = document.createElement("div");
   message.classList.add("message");
-  if (sender === "bot") message.classList.add("bot");
+  message.classList.add(sender === "bot" ? "bot" : "user");
 
   const messageContent = document.createElement("div");
-  messageContent.textContent = sender === "bot" ? `🤖 Bot: ${text}` : `👧 You: ${text}`;
+
+  if (sender === "bot") {
+    // ✅ Convert Markdown to HTML for Gemini's response (no "Bot:" label)
+   messageContent.innerHTML = formatBotResponse(marked.parse(text));
+  } else {
+    // ✅ Just the user's message text (no "You:" label)
+    messageContent.textContent = text;
+  }
+
   message.appendChild(messageContent);
 
   if (images && images.length > 0) {
@@ -139,6 +215,8 @@ function addMessage(text, sender = "user", images = []) {
 }
 
 
+input.addEventListener("input", autoResizeTextarea);
+
    // ✅ Click send button
 async function sendMessage() {
   const userMessage = input.value.trim();
@@ -150,6 +228,7 @@ async function sendMessage() {
   chatHistory.push({ role: "user", content: userMessage, images: base64Images });
   allChats[currentChatId] = chatHistory;
   saveAllChats();
+  renderChatList(); // 💡 Refresh chat names in sidebar
   input.value = "";
 
   try {
@@ -178,6 +257,7 @@ async function sendMessage() {
     addMessage("Error: Could not reach server.", "bot");
   }
 }
+
 sendButton.addEventListener("click", sendMessage);
 
   // ✅ Upload image button triggers file input
@@ -215,9 +295,12 @@ sendButton.addEventListener("click", sendMessage);
   deleteChatBtn.addEventListener("click", () => {
     chatBox.innerHTML = "";
     chatHistory = [];
-    allChats[currentChatId] = [];
+    delete allChats[currentChatId];
+    currentChatId = null;
     saveAllChats();
-  });
+    renderChatList()
+    createNewChat()
+    });
 
   if (!currentChatId|| !allChats[currentChatId]) {
   createNewChat(); // ✅ Automatically create a chat if none
