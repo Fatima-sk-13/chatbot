@@ -77,13 +77,17 @@ if (message) {
 
     } catch (error) {
       console.error("Gemini API error:", error.message);
-      const statusCode = error.status || error.response?.status;
-      if (statusCode === 429) {
-        res.status(429).json({ reply: "Rate limit hit. Try again later." });
-      } else {
-        res.status(500).json({ reply: "Gemini error: " + error.message });
-      }
-    }
+
+      const message = error.message || "";
+
+    if (message.includes("503") || message.toLowerCase().includes("overloaded")) {
+    res.status(503).json({ reply: "Gemini is currently overloaded. Please try again shortly." });
+  } else if (message.includes("429")) {
+    res.status(429).json({ reply: "Rate limit hit. Try again later." });
+  } else {
+    res.status(500).json({ reply: "Gemini error: " + message });
+  }
+}
   });// ← Closing for app.post
 
 // Start the server
