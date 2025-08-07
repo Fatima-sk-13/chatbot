@@ -269,6 +269,21 @@ document.addEventListener("DOMContentLoaded", () => {
     const data = await res.json();
 
     // Replace the typing text with actual response
+typingContent.innerHTML = formatBotResponse(marked.parse(data.reply));
+
+  // Show resized image if returned
+  if (data.resizedImages && Array.isArray(data.resizedImages)) {
+    data.resizedImages.forEach(base64 => {
+      const img = document.createElement("img");
+      img.src = `data:image/jpeg;base64,${base64}`;
+      img.alt = "resized image";
+      img.classList.add("preview-image");
+      typingIndicator.appendChild(img);
+    });
+  }
+
+
+    // Replace the typing text with actual response
     typingContent.innerHTML = formatBotResponse(marked.parse(data.reply));
 
     chatHistory.push({ role: "bot", content: data.reply, images: [] });

@@ -333,23 +333,27 @@ body {
   flex-shrink: 0;
 }
 
-.chat-input .upload-btn{
+.chat-input .upload-btn {
   background-color: #e6308b;
   color: white;
   border: none;
-  padding: 10px 14px;
+  padding: 10px 10px 15px 10px;
   border-radius: 8px;
   cursor: pointer;
   transition: background 0.3s ease;
   flex-shrink: 0;
-  font-size: 24px;      
+  font-size: 24px;
   display: flex;
-  align-items: center;   
+  align-items: center;
   justify-content: center;
-  font-weight: bold;   
-  line-height: 0.9;     
-  overflow: hidden;     
+  font-weight: bold;
+  height: 48px;
+  width: 48px;
+  overflow: hidden;
+  line-height: 48px; 
 }
+
+
 
 
 .chat-input .upload-btn:hover,
